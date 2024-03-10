@@ -39,17 +39,3 @@ SYSCALL_DEFINE0(stop_elevator){
 	return -ENOSYS;
     }	
  
-asmlinkage long start_elevator(void){
-    printk(KERN_INFO "Elevator is starting");
-
-}
-
-asmlinkage long issue_request(start_floor, destination_floor, type){
-    printk(KERN_INFO "Issuing request");
-   
-}
-
-asmlinkage long stop_elevator(void){
-    printk(KERN_INFO "Stopping elevator");
-    
-}
