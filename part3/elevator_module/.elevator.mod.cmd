@@ -1,0 +1,1 @@
+savedcmd_/home/p2/Desktop/project2/part3/elev_module/elevator.mod := printf '%s\n'   elevator.o | awk '!x[$$0]++ { print("/home/p2/Desktop/project2/part3/elev_module/"$$0) }' > /home/p2/Desktop/project2/part3/elev_module/elevator.mod

@@ -1,0 +1,1 @@
+savedcmd_/home/p2/Desktop/project2/part3/elev_module/Module.symvers :=  scripts/mod/modpost -M -m -a      -o /home/p2/Desktop/project2/part3/elev_module/Module.symvers -T /home/p2/Desktop/project2/part3/elev_module/modules.order -i Module.symvers -e 

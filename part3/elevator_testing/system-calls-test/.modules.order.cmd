@@ -1,0 +1,1 @@
+savedcmd_/home/p2/Desktop/project2/part3/elevator_testing/system-calls-test/modules.order := {   echo /home/p2/Desktop/project2/part3/elevator_testing/system-calls-test/syscheck.o; :; } > /home/p2/Desktop/project2/part3/elevator_testing/system-calls-test/modules.order
