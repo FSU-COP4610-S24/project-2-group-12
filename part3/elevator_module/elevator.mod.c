@@ -38,9 +38,16 @@ __used __section("__versions") = {
 	{ 0x5b8239ca, "__x86_return_thunk" },
 	{ 0x5ceb3cf3, "kmalloc_caches" },
 	{ 0x55a80f26, "kmalloc_trace" },
+	{ 0xb3f7646e, "kthread_should_stop" },
+	{ 0x37a0cba, "kfree" },
+	{ 0x1ef5e74b, "kthread_stop" },
 	{ 0x122c3a7e, "_printk" },
 	{ 0xd9db8fff, "STUB_start_elevator" },
-	{ 0x37a0cba, "kfree" },
+	{ 0xa08a3aa8, "STUB_issue_request" },
+	{ 0x88d8d38e, "STUB_stop_elevator" },
+	{ 0xd6f48147, "kthread_create_on_node" },
+	{ 0xe6384aa5, "wake_up_process" },
+	{ 0xf9a482f9, "msleep" },
 	{ 0xbdfb6dbb, "__fentry__" },
 	{ 0xde22484f, "module_layout" },
 };
@@ -48,4 +55,4 @@ __used __section("__versions") = {
 MODULE_INFO(depends, "");
 
 
-MODULE_INFO(srcversion, "8040042A5D3DDFA6BC776DC");
+MODULE_INFO(srcversion, "D0EBAC7AF7DBD2792BEEA81");

@@ -1026,6 +1026,10 @@ deps_/home/p2/Desktop/project2/part3/elevator_module/elevator.o := \
     $(wildcard include/config/HAVE_MOD_ARCH_SPECIFIC) \
     $(wildcard include/config/MODULES_USE_ELF_REL) \
     $(wildcard include/config/MODULES_USE_ELF_RELA) \
+  include/linux/kthread.h \
+  include/linux/delay.h \
+  arch/x86/include/asm/delay.h \
+  include/asm-generic/delay.h \
 
 /home/p2/Desktop/project2/part3/elevator_module/elevator.o: $(deps_/home/p2/Desktop/project2/part3/elevator_module/elevator.o)
 

@@ -2,6 +2,9 @@
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/list.h>
+#include <linux/kthread.h>
+#include <linux/sched.h>
+#include <linux/delay.h>
 
 #define __NR_START_ELEVATOR 548
 #define __NR_ISSUE_REQUEST 549
@@ -32,7 +35,8 @@ MODULE_VERSION("1.0");
 struct passenger{
     int weight;
     int type;
-
+    int source;
+    int destination;
     struct list_head list;
 };
 
@@ -41,18 +45,25 @@ struct elevator{
     int current_floor;
     int current_load;
     int current_weight;
-
+    
+    struct list_head waiting_list;
     struct list_head passenger_list;
 };
 
+struct thread_parameter{
+    int id;
+    struct task_struct *kthread;
+};
+
 static struct elevator *elevator_system;
+static struct thread_parameter *elevator_thread;
 extern int (*STUB_start_elevator)(void);
 extern int (*STUB_issue_request)(int, int, int);
 extern int (*STUB_stop_elevator)(void);
 
 int start_elevator(void){
 
-    if (elevator_system->state == ACTIVE){
+    if (elevator_system && elevator_system->state == ACTIVE){
         return 1;
     }
 
@@ -86,7 +97,8 @@ int issue_request(int start_floor, int destination_floor, int type){
     if (type == PARTTIMER){
         person->type = PARTTIMER;
         person->weight = 1;
-    }
+    
+}
     else if (type == LAWYER){
         person->type = LAWYER;
         person->weight = 1.5;
@@ -100,22 +112,104 @@ int issue_request(int start_floor, int destination_floor, int type){
         person->weight = 0.5;
     }
     
-    list_add_tail(&person->list, &elevator_system->passenger_list);
-    elevator_system->current_load += 1;
+    person->source = start_floor;
+    person->destination = destination_floor;
+    //adds the passenger to a waiting list of passengers
+    list_add_tail(&person->list, &elevator_system->waiting_list);
+    return 0;
+}
 
-    if (!elevator_system->current_weight)
-    {
-        elevator_system->current_weight = 0;
+int stop_elevator(void){
+    if(list_empty(&elevator_system->passenger_list)){
+        elevator_system->state = OFFLINE;
     }
-    elevator_system->current_weight += person->weight; //need to update to use doubles instead of ints
+
+    if (elevator_system->state == OFFLINE){
+        return 1;
+    }
+    return 0;
+}
+int load_elevator(void){
+    struct passenger *passenger_ptr, *next;
+    int current_floor = elevator_system->current_floor;
+
+    //check to see if there are passengers in the waiting list that are on current floor
+    list_for_each_entry_safe(passenger_ptr, next, &elevator_system->waiting_list, list) {
+        if (passenger_ptr->source == current_floor) {
+            //move the passenger from the waiting list to the passenger list
+            list_del(&passenger_ptr->list);
+            list_add_tail(&passenger_ptr->list, &elevator_system->passenger_list);
+            elevator_system->current_load++;
+            elevator_system->current_weight += passenger_ptr->weight;
+
+            //check if the elevator is at full capacity
+            if (elevator_system->current_load >= MAX_PASSENGER_COUNT || elevator_system->current_weight >= MAX_ELEVATOR_WEIGHT) {
+                return -1;
+            }
+        }
+    }
 
     return 0;
-
 }
+int unload_elevator(void) {
+    struct passenger *passenger_ptr, *next;
+    int current_floor = elevator_system->current_floor;
+
+    //check to see if there are passengers on the elevator with a destination of current floor
+    list_for_each_entry_safe(passenger_ptr, next, &elevator_system->passenger_list, list) {
+        if (passenger_ptr->destination == current_floor) {
+            // Remove the passenger from the passenger list
+            list_del(&passenger_ptr->list);
+            elevator_system->current_load--;
+            elevator_system->current_weight -= passenger_ptr->weight;
+            kfree(passenger_ptr);
+        }
+    }
+
+    return 0;
+}
+
+
+int move_elevator(int target_floor){
+    if (target_floor > MAX_FLOOR || target_floor < MIN_FLOOR){
+        return -1;
+    }
+
+    while (elevator_system->current_floor != target_floor){
+        if (elevator_system->current_floor < target_floor){
+            elevator_system->current_floor++;
+            ssleep(2);
+        }
+        else{
+            elevator_system->current_floor--;
+            ssleep(2);
+        }
+    }
+    return 0;
+}
+
+int elevator_loop(void * data){
+    struct thread_parameter *parm = data;
+    while(!kthread_should_stop()){
+    //implement scheduling logic
+    }
+    return 0;
+}
+
+void thread_init_parameter(struct thread_parameter *parm){
+    static int id = 1;
+    parm->id = id;
+    parm->kthread = kthread_run(elevator_loop, parm, "Starting thread");
+}
+
 
 static int __init elevator_init(void){
     printk(KERN_INFO "module loaded");
     STUB_start_elevator = start_elevator;
+    STUB_issue_request = issue_request;
+    STUB_stop_elevator = stop_elevator;
+    thread_init_parameter(elevator_thread);
+
     return 0;
 }
 
@@ -123,6 +217,7 @@ static void __exit elevator_exit(void){
     if(elevator_system){
         kfree(elevator_system);
     }
+    kthread_stop(elevator_thread->kthread);
     printk(KERN_INFO "ELEVATOR MODULE CLOSED");
 }
 
