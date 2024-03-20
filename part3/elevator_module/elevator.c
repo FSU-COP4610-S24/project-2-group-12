@@ -5,6 +5,7 @@
 #include <linux/kthread.h>
 #include <linux/sched.h>
 #include <linux/delay.h>
+#include <linux/mutex.h>
 
 #define __NR_START_ELEVATOR 548
 #define __NR_ISSUE_REQUEST 549
@@ -25,6 +26,7 @@
 #define LAWYER 1
 #define BOSS 2
 #define VISITOR 3
+static struct mutex elevator_mutex;
 
 
 MODULE_LICENSE("GPL");
@@ -114,8 +116,11 @@ int issue_request(int start_floor, int destination_floor, int type){
     
     person->source = start_floor;
     person->destination = destination_floor;
+    mutex_lock(&elevator_mutex);
     //adds the passenger to a waiting list of passengers
     list_add_tail(&person->list, &elevator_system->waiting_list);
+    mutex_unlock(&elevator_mutex);
+
     return 0;
 }
 
@@ -191,7 +196,9 @@ int move_elevator(int target_floor){
 int elevator_loop(void * data){
     struct thread_parameter *parm = data;
     while(!kthread_should_stop()){
+	    mutex_lock(&elevator_mutex);
     //implement scheduling logic
+    	    mutex_unlock(&elevator_mutex);
     }
     return 0;
 }
@@ -205,19 +212,28 @@ void thread_init_parameter(struct thread_parameter *parm){
 
 static int __init elevator_init(void){
     printk(KERN_INFO "module loaded");
+    mutex_init(&elevator_mutex);
     STUB_start_elevator = start_elevator;
     STUB_issue_request = issue_request;
     STUB_stop_elevator = stop_elevator;
+    elevator_thread = kmalloc(sizeof(struct thread_parameter), GFP_KERNEL);
+    if(!elevator_thread) {
+         printk(KERN_ERR "Failed to allocate memory for elevator_thread\n");
+         return -ENOMEM;
+    }
     thread_init_parameter(elevator_thread);
 
     return 0;
 }
 
 static void __exit elevator_exit(void){
-    if(elevator_system){
-        kfree(elevator_system);
+    if(elevator_thread){
+        if(elevator_thread->kthread) {
+            kthread_stop(elevator_thread->kthread);
+        }
+        kfree(elevator_thread);
+        elevator_thread = NULL;
     }
-    kthread_stop(elevator_thread->kthread);
     printk(KERN_INFO "ELEVATOR MODULE CLOSED");
 }
 

@@ -38,10 +38,13 @@ __used __section("__versions") = {
 	{ 0x5b8239ca, "__x86_return_thunk" },
 	{ 0x5ceb3cf3, "kmalloc_caches" },
 	{ 0x55a80f26, "kmalloc_trace" },
+	{ 0x4dfa8d4b, "mutex_lock" },
+	{ 0x3213f038, "mutex_unlock" },
 	{ 0xb3f7646e, "kthread_should_stop" },
-	{ 0x37a0cba, "kfree" },
 	{ 0x1ef5e74b, "kthread_stop" },
+	{ 0x37a0cba, "kfree" },
 	{ 0x122c3a7e, "_printk" },
+	{ 0xcefb0c9f, "__mutex_init" },
 	{ 0xd9db8fff, "STUB_start_elevator" },
 	{ 0xa08a3aa8, "STUB_issue_request" },
 	{ 0x88d8d38e, "STUB_stop_elevator" },
@@ -55,4 +58,4 @@ __used __section("__versions") = {
 MODULE_INFO(depends, "");
 
 
-MODULE_INFO(srcversion, "D0EBAC7AF7DBD2792BEEA81");
+MODULE_INFO(srcversion, "209B7051DBE07E99609A245");
