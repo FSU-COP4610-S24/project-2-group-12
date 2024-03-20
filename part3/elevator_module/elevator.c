@@ -208,16 +208,24 @@ static int __init elevator_init(void){
     STUB_start_elevator = start_elevator;
     STUB_issue_request = issue_request;
     STUB_stop_elevator = stop_elevator;
+    elevator_thread = kmalloc(sizeof(struct thread_parameter), GFP_KERNEL);
+    if(!elevator_thread) {
+         printk(KERN_ERR "Failed to allocate memory for elevator_thread\n";
+         return -ENOMEM;
+    }
     thread_init_parameter(elevator_thread);
 
     return 0;
 }
 
 static void __exit elevator_exit(void){
-    if(elevator_system){
-        kfree(elevator_system);
+    if(elevator_thread){
+        if(elevator_thread->kthread) {
+            kthread_stop(elevator_thread->kthread);
+        }
+        kfree(elevator_thread);
+        elevator_thread = NULL;
     }
-    kthread_stop(elevator_thread->kthread);
     printk(KERN_INFO "ELEVATOR MODULE CLOSED");
 }
 
