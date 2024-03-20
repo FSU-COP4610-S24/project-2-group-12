@@ -1,1 +1,1 @@
-savedcmd_/home/p2/iongit/project-2-group-12/part3/elevator_module/Module.symvers :=  scripts/mod/modpost -M -m -a      -o /home/p2/iongit/project-2-group-12/part3/elevator_module/Module.symvers -T /home/p2/iongit/project-2-group-12/part3/elevator_module/modules.order -i Module.symvers -e 
+savedcmd_/home/p2/Desktop/project2/part3/elevator_module/Module.symvers :=  scripts/mod/modpost -M -m -a      -o /home/p2/Desktop/project2/part3/elevator_module/Module.symvers -T /home/p2/Desktop/project2/part3/elevator_module/modules.order -i Module.symvers -e 
