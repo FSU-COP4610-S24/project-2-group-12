@@ -218,7 +218,7 @@ static int __init elevator_init(void){
     STUB_stop_elevator = stop_elevator;
     elevator_thread = kmalloc(sizeof(struct thread_parameter), GFP_KERNEL);
     if(!elevator_thread) {
-         printk(KERN_ERR "Failed to allocate memory for elevator_thread\n";
+         printk(KERN_ERR "Failed to allocate memory for elevator_thread\n");
          return -ENOMEM;
     }
     thread_init_parameter(elevator_thread);
