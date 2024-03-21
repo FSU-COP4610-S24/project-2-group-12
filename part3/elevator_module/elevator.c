@@ -20,6 +20,8 @@
 #define OFFLINE 0
 #define IDLE 1
 #define ACTIVE 2
+#define LOADING 3
+#define UNLOADING 4
 #define UP 3
 #define DOWN 4
 #define PARTTIMER 0
@@ -196,9 +198,22 @@ int move_elevator(int target_floor){
 int elevator_loop(void * data){
     struct thread_parameter *parm = data;
     while(!kthread_should_stop()){
+
 	    mutex_lock(&elevator_mutex);
-    //implement scheduling logic
-    	    mutex_unlock(&elevator_mutex);
+        //check if elevator is active and load it
+        if(elevator_system->state == ACTIVE){
+            load_elevator();
+            //unload elevator checks to see if any passengers can be unloaded at the current level and unloads them
+            if (elevator_system->current_load > 0){
+                unload_elevator();
+                // service the passenger in the front of the queue by moving to their desired level
+                if (!list_empty(&elevator_system->passenger_list)){
+                    struct passenger *next_passenger = list_first_entry(&elevator_system->passenger_list, struct passenger, list);
+                    move_elevator(next_passenger->destination);
+                }
+            }
+        }
+    mutex_unlock(&elevator_mutex);
     }
     return 0;
 }
