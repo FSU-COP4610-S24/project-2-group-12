@@ -1,1 +1,1 @@
-/home/p2/Desktop/project2/part3/elevator_module/elevator.o
+/home/kajda/Documents/Project2/project-2-group-12/part3/elevator_module/elevator.o

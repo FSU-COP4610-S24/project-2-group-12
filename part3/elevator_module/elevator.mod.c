@@ -35,7 +35,6 @@ MODULE_INFO(retpoline, "Y");
 
 static const struct modversion_info ____versions[]
 __used __section("__versions") = {
-	{ 0x5b8239ca, "__x86_return_thunk" },
 	{ 0x5ceb3cf3, "kmalloc_caches" },
 	{ 0x55a80f26, "kmalloc_trace" },
 	{ 0x1ef5e74b, "kthread_stop" },
@@ -43,19 +42,25 @@ __used __section("__versions") = {
 	{ 0x122c3a7e, "_printk" },
 	{ 0x4dfa8d4b, "mutex_lock" },
 	{ 0x3213f038, "mutex_unlock" },
+	{ 0xfb578fc5, "memset" },
+	{ 0x3c3ff9fd, "sprintf" },
+	{ 0x619cb7dd, "simple_read_from_buffer" },
+	{ 0xf0fdf6cb, "__stack_chk_fail" },
 	{ 0xcefb0c9f, "__mutex_init" },
 	{ 0xd9db8fff, "STUB_start_elevator" },
 	{ 0xa08a3aa8, "STUB_issue_request" },
 	{ 0x88d8d38e, "STUB_stop_elevator" },
+	{ 0x919f00e2, "proc_create" },
 	{ 0xd6f48147, "kthread_create_on_node" },
 	{ 0xe6384aa5, "wake_up_process" },
 	{ 0xf9a482f9, "msleep" },
 	{ 0xb3f7646e, "kthread_should_stop" },
 	{ 0xbdfb6dbb, "__fentry__" },
+	{ 0x5b8239ca, "__x86_return_thunk" },
 	{ 0xde22484f, "module_layout" },
 };
 
 MODULE_INFO(depends, "");
 
 
-MODULE_INFO(srcversion, "29252C852D3DDCE01B827A6");
+MODULE_INFO(srcversion, "94C7ABA1D327BBAF80B3CEA");
