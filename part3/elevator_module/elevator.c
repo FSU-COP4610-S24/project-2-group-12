@@ -198,8 +198,7 @@ int move_elevator(int target_floor){
 int elevator_loop(void * data){
     struct thread_parameter *parm = data;
     while(!kthread_should_stop()){
-
-	    mutex_lock(&elevator_mutex);
+    	mutex_lock(&elevator_mutex);
         //check if elevator is active and load it
         if(elevator_system->state == ACTIVE){
             load_elevator();
@@ -213,7 +212,7 @@ int elevator_loop(void * data){
                 }
             }
         }
-    mutex_unlock(&elevator_mutex);
+        mutex_unlock(&elevator_mutex);
     }
     return 0;
 }
