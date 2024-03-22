@@ -10,7 +10,6 @@
 #include <linux/seq_file.h>
 
 
-
 #define __NR_START_ELEVATOR 548
 #define __NR_ISSUE_REQUEST 549
 #define __NR_STOP_ELEVATOR 550
@@ -26,6 +25,7 @@
 #define ACTIVE 2
 #define LOADING 3
 #define UNLOADING 4
+#define DEACTIVATING 5
 #define UP 3
 #define DOWN 4
 #define PARTTIMER 0
@@ -79,6 +79,7 @@ static int serviced_passengers(void);
 static int all_waiting_passengers(void);
 
 int start_elevator(void){
+    printk(KERN_INFO "starting elevator\n");
     if (elevator_system && elevator_system->state == ACTIVE){
         return 1;
     }
@@ -103,12 +104,17 @@ int start_elevator(void){
 }
 
 int issue_request(int start_floor, int destination_floor, int type){
+    printk(KERN_INFO "issuing request\n");
     if (start_floor < MIN_FLOOR || start_floor > MAX_FLOOR || destination_floor < MIN_FLOOR || destination_floor > MAX_FLOOR || type < MIN_PASSENGER_TYPE || type > MAX_PASSENGER_TYPE){
         return 1;
     }
 
     struct passenger *person;
     person = kmalloc(sizeof(struct passenger), __GFP_RECLAIM);
+    if(!person) {
+         printk(KERN_ERR "Failed to allocate memory for passenger\n");
+         return -ENOMEM;
+    }
 
     if (type == PARTTIMER){
         person->type = PARTTIMER;
@@ -137,6 +143,9 @@ int issue_request(int start_floor, int destination_floor, int type){
 }
 
 int stop_elevator(void){
+    printk(KERN_INFO "stopping elevator\n");
+    //set state to deactivating to stop servicing new requests
+    elevator_system->state = DEACTIVATING;
     if(list_empty(&elevator_system->passenger_list)){
         elevator_system->state = OFFLINE;
     }
@@ -147,6 +156,7 @@ int stop_elevator(void){
     return 0;
 }
 int load_elevator(void){
+    printk(KERN_INFO "loading elevator\n");
     struct passenger *passenger_ptr, *next;
     int current_floor = elevator_system->current_floor;
 
@@ -169,6 +179,7 @@ int load_elevator(void){
     return 0;
 }
 int unload_elevator(void) {
+    printk(KERN_INFO "unloading elevator\n");
     struct passenger *passenger_ptr, *next;
     int current_floor = elevator_system->current_floor;
 
@@ -188,18 +199,19 @@ int unload_elevator(void) {
 
 
 int move_elevator(int target_floor){
+    printk(KERN_INFO "moving elevator\n");
     if (target_floor > MAX_FLOOR || target_floor < MIN_FLOOR){
         return -1;
     }
 
     while (elevator_system->current_floor != target_floor){
         if (elevator_system->current_floor < target_floor){
-	    direction = UP;
+	        direction = UP;
             elevator_system->current_floor++;
             ssleep(2);
         }
         else{
-	    direction = DOWN;
+	        direction = DOWN;
             elevator_system->current_floor--;
             ssleep(2);
         }
@@ -208,6 +220,7 @@ int move_elevator(int target_floor){
 }
 
 int elevator_loop(void *data) {
+    printk(KERN_INFO "starting elevator loop\n");
     struct thread_parameter *parm = data;
     
     while (!kthread_should_stop()) {
@@ -215,6 +228,7 @@ int elevator_loop(void *data) {
         
         // Check if elevator is active
         if (elevator_system->state == ACTIVE) {
+            printk(KERN_INFO "elevator active\n");
             // Load elevator if there are passengers waiting
             if (elevator_system->state != LOADING && !list_empty(&elevator_system->waiting_list)) {
                 elevator_system->state = LOADING;
@@ -246,7 +260,7 @@ int elevator_loop(void *data) {
 void thread_init_parameter(struct thread_parameter *parm){
     static int id = 1;
     parm->id = id;
-    parm->kthread = kthread_run(elevator_loop, parm, "Starting thread");
+    parm->kthread = kthread_run(elevator_loop, parm, "Starting thread\n");
 }
 
 static char passenger_type(int type) {
@@ -308,8 +322,6 @@ static int all_waiting_passengers() {
 static ssize_t elevator_read(struct file *m, char __user *ubuf, size_t count, loff_t *ppos) {
 	char buf[10000];
 	int len = 0;
-	
-	mutex_lock(&elevator_mutex);
 
 	switch(elevator_system->state) {
 		case OFFLINE:
@@ -333,7 +345,7 @@ static ssize_t elevator_read(struct file *m, char __user *ubuf, size_t count, lo
 
 	len += sprintf(buf + len, "Current floor: %d\n", elevator_system->current_floor);
 	len += sprintf(buf + len, "Current load: %.1d lbs\n", elevator_system->current_weight);
-	len += sprintf(buf + len, "Elevator status: ");
+	len += sprintf(buf + len, "Elevator status: \n");
 	
 	struct passenger *passenger_ptr;
 	list_for_each_entry(passenger_ptr, &elevator_system->passenger_list, list) {
@@ -363,8 +375,6 @@ static ssize_t elevator_read(struct file *m, char __user *ubuf, size_t count, lo
         len += sprintf(buf + len, "\nNumber of passengers: %d\n", 
 			serviced_passengers());
 
-	mutex_unlock(&elevator_mutex);
-
 	return simple_read_from_buffer(ubuf, count, ppos, buf, len);
 }
 
@@ -373,7 +383,7 @@ static const struct proc_ops elevator_fops = {
 };
 
 static int __init elevator_init(void){
-    printk(KERN_INFO "module loaded");
+    printk(KERN_INFO "module loaded\n");
     mutex_init(&elevator_mutex);
     STUB_start_elevator = start_elevator;
     STUB_issue_request = issue_request;
@@ -397,7 +407,7 @@ static void __exit elevator_exit(void){
         kfree(elevator_thread);
         elevator_thread = NULL;
     }
-    printk(KERN_INFO "ELEVATOR MODULE CLOSED");
+    printk(KERN_INFO "ELEVATOR MODULE CLOSED\n");
 }
 
 
