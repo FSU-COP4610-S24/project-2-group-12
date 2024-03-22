@@ -41,9 +41,8 @@ __used __section("__versions") = {
 	{ 0x37a0cba, "kfree" },
 	{ 0x122c3a7e, "_printk" },
 	{ 0x4dfa8d4b, "mutex_lock" },
-	{ 0x3213f038, "mutex_unlock" },
-	{ 0xfb578fc5, "memset" },
 	{ 0x3c3ff9fd, "sprintf" },
+	{ 0x3213f038, "mutex_unlock" },
 	{ 0x619cb7dd, "simple_read_from_buffer" },
 	{ 0xf0fdf6cb, "__stack_chk_fail" },
 	{ 0xcefb0c9f, "__mutex_init" },
@@ -63,4 +62,4 @@ __used __section("__versions") = {
 MODULE_INFO(depends, "");
 
 
-MODULE_INFO(srcversion, "94C7ABA1D327BBAF80B3CEA");
+MODULE_INFO(srcversion, "9EB63FFBDDAACDD77FE2BC9");

@@ -79,7 +79,6 @@ static int serviced_passengers(void);
 static int all_waiting_passengers(void);
 
 int start_elevator(void){
-
     if (elevator_system && elevator_system->state == ACTIVE){
         return 1;
     }
@@ -95,7 +94,7 @@ int start_elevator(void){
     elevator_system->current_floor = 1;
     elevator_system->current_load = 0;
     INIT_LIST_HEAD(&elevator_system->passenger_list);
-
+    INIT_LIST_HEAD(&elevator_system->waiting_list);
     if (elevator_system->state != IDLE && elevator_system->current_floor != 1 && elevator_system->current_load !=0){
         return 1; // supposed to return ERRORNUM here need to update
     }
@@ -131,10 +130,8 @@ int issue_request(int start_floor, int destination_floor, int type){
     
     person->source = start_floor;
     person->destination = destination_floor;
-    mutex_lock(&elevator_mutex);
     //adds the passenger to a waiting list of passengers
     list_add_tail(&person->list, &elevator_system->waiting_list);
-    mutex_unlock(&elevator_mutex);
 
     return 0;
 }
@@ -210,25 +207,39 @@ int move_elevator(int target_floor){
     return 0;
 }
 
-int elevator_loop(void * data){
+int elevator_loop(void *data) {
     struct thread_parameter *parm = data;
-    while(!kthread_should_stop()){
-    	mutex_lock(&elevator_mutex);
-        //check if elevator is active and load it
-        if(elevator_system->state == ACTIVE){
-            load_elevator();
-            //unload elevator checks to see if any passengers can be unloaded at the current level and unloads them
-            if (elevator_system->current_load > 0){
+    
+    while (!kthread_should_stop()) {
+        mutex_lock(&elevator_mutex);
+        
+        // Check if elevator is active
+        if (elevator_system->state == ACTIVE) {
+            // Load elevator if there are passengers waiting
+            if (elevator_system->state != LOADING && !list_empty(&elevator_system->waiting_list)) {
+                elevator_system->state = LOADING;
+                load_elevator();
+                elevator_system->state = ACTIVE;
+            }
+            
+            // Unload elevator if there are passengers to drop off
+            if (elevator_system->state != UNLOADING && !list_empty(&elevator_system->passenger_list)) {
+                elevator_system->state = UNLOADING;
                 unload_elevator();
-                // service the passenger in the front of the queue by moving to their desired level
-                if (!list_empty(&elevator_system->passenger_list)){
-                    struct passenger *next_passenger = list_first_entry(&elevator_system->passenger_list, struct passenger, list);
-                    move_elevator(next_passenger->destination);
-                }
+                elevator_system->state = ACTIVE;
+            }
+            
+            // Move elevator only if it's not currently loading or unloading
+            if (elevator_system->state == ACTIVE && elevator_system->current_load > 0) {
+                struct passenger *next_passenger = list_first_entry(&elevator_system->passenger_list, struct passenger, list);
+                move_elevator(next_passenger->destination);
             }
         }
+        
         mutex_unlock(&elevator_mutex);
+        
     }
+    
     return 0;
 }
 
