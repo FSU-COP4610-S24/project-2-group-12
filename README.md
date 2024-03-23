@@ -18,7 +18,7 @@ Group 12
 - **Assigned to**: Ryan Baker
 
 ### Part 2: Timer Kernel Module
-- **Assigned to**: Alexander Kadja
+- **Assigned to**: Alexander Kajda
 
 ### Part 3a: Adding System Calls
 - **Assigned to**: Ryan Baker
@@ -39,7 +39,7 @@ Group 12
 - **Assigned to**: Ryan Baker
 
 ### Part 3f: Write to Proc file
-- **Assigned to**: Alexander Kadja
+- **Assigned to**: Alexander Kajda
 
   
 
@@ -49,11 +49,15 @@ Group 12
 shell/
 │
 ├── part1/
-│ ├── 
-│ └── 
+│ └──empty.c
+│ └──empty.trace
+| └──part1.c
+| └──part1.trace
+| └──Makefile
 ├── part2/
-│ ├── 
-│ └── 
+│ ├───── src/
+│ | └───── my_timer.c
+│ └── Makefile
 ├── part3/
 │ ├── 
 │ └── 
@@ -63,23 +67,51 @@ shell/
 ## How to Compile & Execute
 
 ### Requirements
-- **Compiler**: `gcc`
+- **Compiler**: `gcc' and install linux-6.7.9 kernel with added modifications
 
 ### Compilation
+
+#### For the Timer Module:
+
+In the part 2 folder run 
 ```bash
 make
 ```
-This will build the executable in ...
-### Execution
-```bash
-make run
+to create my_timer.ko, and
+
 ```
-This will run the program ...
+sudo insmod my_timer.ko
+```
+to insert the timer module into the linux kernel.
 
-## Bugs
-- **Bug 1**: This is bug 1.
-- **Bug 2**: This is bug 2.
-- **Bug 3**: This is bug 3.
+#### For the Elevator Module
+Now navigate to the part 3 folder
+```
+cd ../part3
+```
 
-## Considerations
-[Description]
+Run make again and this time insert the elevator.ko module that was created.
+
+```
+sudo insmod elevator.ko
+```
+### Execution
+Use the --start flag on a consumer program that will begin running the elevator.
+Use a separate producer file and specify the number of entries (passengers) on the command line.
+View the proc file using:
+```
+cat /proc/elevator
+```
+
+Or:
+
+```
+watch -n1 cat /proc/elevator
+```
+To stop the elevator run the same consumer program with a --stop flag.
+
+Unload the modules with:
+```
+sudo rmmod my_timer.ko
+sudo rmmod elevator.ko
+```
