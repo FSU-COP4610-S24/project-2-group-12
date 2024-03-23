@@ -37,6 +37,7 @@
 static struct mutex elevator_mutex;
 static struct proc_dir_entry *elevator_entry;
 static int direction = IDLE;
+static int pass_complete = 0;
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("RYAN BAKER");
@@ -190,6 +191,8 @@ int unload_elevator(void) {
             elevator_system->current_load--;
             elevator_system->current_weight -= passenger_ptr->weight;
             kfree(passenger_ptr);
+	    pass_complete++;
+	    printk(KERN_INFO "Passengers serviced: %d\n", pass_complete);
         }
     }
 
@@ -215,6 +218,8 @@ int move_elevator(int target_floor){
             ssleep(2);
         }
     }
+    elevator_system->state = IDLE;
+    printk(KERN_INFO "Elevator state set to 1 for IDLE. Elevator state: %d\n", elevator_system->state);
     return 0;
 }
 
