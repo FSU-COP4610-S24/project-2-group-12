@@ -1,3 +1,5 @@
+// Timer kernel module which prints time since epoch and seconds elapsed since last proc'd
+
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/kernel.h>
@@ -12,11 +14,12 @@ MODULE_AUTHOR("Alexander Kajda");
 MODULE_DESCRIPTION("A kernel module to track current and elapsed time");
 MODULE_VERSION("0.1");
 
+// creates timer entry and timespec
 static struct proc_dir_entry *timer_entry;
 static struct timespec64 ts_prev;
 
 static ssize_t my_timer_read(struct file *file, char __user *ubuf, size_t count, loff_t *ppos) {
-
+// Read function which prints both the time elapsed since the epoch and time elapsed since last called
 	struct timespec64 ts_now;
 	char buf[256];
 	int len = 0;
@@ -37,10 +40,12 @@ static ssize_t my_timer_read(struct file *file, char __user *ubuf, size_t count,
 }
 
 static const struct proc_ops my_timer_fops = {
+	// proc ops struct for the timer
 	.proc_read = my_timer_read,
 };
 
 static int __init my_timer_init(void) {
+	// Initializes timer 
 	timer_entry = proc_create("timer", 0644, NULL, &my_timer_fops);
 	if (!timer_entry) {
 		pr_err("Failed to create proc entry\n");
@@ -51,6 +56,7 @@ static int __init my_timer_init(void) {
 }
 
 static void __exit my_timer_exit(void) {
+	// exit function for timer
 	if (timer_entry)
 		proc_remove(timer_entry);
 	pr_info("my_timer module removed\n");
