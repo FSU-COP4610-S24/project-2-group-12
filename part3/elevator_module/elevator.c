@@ -268,127 +268,137 @@ void thread_init_parameter(struct thread_parameter *parm){
 }
 
 static char passenger_type(int type) {
-	switch(type) {
-		case PARTTIMER:
-			return 'P';
-		case LAWYER:
-			return 'L';
-		case BOSS:
-			return 'B';
-		case VISITOR:
-			return 'V';
-		default:
-			return '?';
+    // return passenger type for proc file
+    switch(type) {
+	case PARTTIMER:
+	    return 'P';
+	case LAWYER:
+	    return 'L';
+	case BOSS:
+	    return 'B';
+	case VISITOR:
+	    return 'V';
+	default:
+	    return '?';
 	}
 }
 
 static int waiting_passengers(int floor) {
-	int count = 0;
-	struct passenger *passenger_ptr;
-	list_for_each_entry(passenger_ptr, &elevator_system->waiting_list, list) {
-		if (passenger_ptr->source == floor) {
-			count++;
-		}
+    // returns number of passengers waiting on a specific floor
+    int count = 0;
+    struct passenger *passenger_ptr;
+    list_for_each_entry(passenger_ptr, &elevator_system->waiting_list, list) {
+	if (passenger_ptr->source == floor) {
+	    count++;
 	}
-	return count;
+    }
+    return count;
 }
 
 static int all_passengers() {
-	int count = 0;
-	struct passenger *passenger_ptr;
-	list_for_each_entry(passenger_ptr, &elevator_system->passenger_list, list) {
-		count++;
-	}
-	return count;
+    // returns number of passengers on the elevator
+    int count = 0;
+    struct passenger *passenger_ptr;
+    list_for_each_entry(passenger_ptr, &elevator_system->passenger_list, list) {
+	count++;
+    }
+    return count;
 }
 
 static int serviced_passengers() {
-	int count = 0;
-	int current_floor = elevator_system->current_floor;
-	struct passenger *passenger_ptr;
-	list_for_each_entry(passenger_ptr, &elevator_system->passenger_list, list) {
-		if (passenger_ptr->destination == current_floor) {
-			count++;
-		}
+    // returns number of serviced passengers on the elevator
+    int count = 0;
+    int current_floor = elevator_system->current_floor;
+    struct passenger *passenger_ptr;
+    list_for_each_entry(passenger_ptr, &elevator_system->passenger_list, list) {
+	if (passenger_ptr->destination == current_floor) {
+	    count++;
 	}
-	return count;
+    }
+    return count;
 }
 
 static int all_waiting_passengers() {
-	int count = 0;
-	for (int i = MIN_FLOOR; i <= MAX_FLOOR; i++) {
-		count += waiting_passengers(i);
-	}
-	return count;
+    // returns total number of waiting passengers across all floors
+    int count = 0;
+    for (int i = MIN_FLOOR; i <= MAX_FLOOR; i++) {
+	count += waiting_passengers(i);
+    }
+    return count;
 }
 
 
 static ssize_t elevator_read(struct file *m, char __user *ubuf, size_t count, loff_t *ppos) {
-	char buf[10000];
-	int len = 0;
+    // reads the elevator information and prints the data into the proc file
+    char buf[10000];
+    int len = 0;
 
-	switch(elevator_system->state) {
-		case OFFLINE:
-			len += sprintf(buf + len, "Elevator state: OFFLINE\n");
-			break;
-		case IDLE:
-			if (direction == UP){
-				len += sprintf(buf + len, "Elevator state: UP\n");
-				break;
-			}
-			else if (direction == DOWN){
-				len += sprintf(buf + len, "Elevator state: DOWN\n");
-				break;
-			}
-			len += sprintf(buf + len, "Elevator state: IDLE\n");
-			break;
-		case LOADING:
-                        len += sprintf(buf + len, "Elevator state: LOADING\n");
-                        break;
-		default:
-			len += sprintf(buf + len, "Elevator state: UNKNOWN\n");
-	}
-
-	len += sprintf(buf + len, "Current floor: %d\n", elevator_system->current_floor);
-	len += sprintf(buf + len, "Current load: %.1d lbs\n", elevator_system->current_weight);
-	len += sprintf(buf + len, "Elevator status: \n");
-	
-	struct passenger *passenger_ptr;
-	list_for_each_entry(passenger_ptr, &elevator_system->passenger_list, list) {
-		len += sprintf(buf + len, "%c%d ", passenger_type(passenger_ptr->type), 
-				passenger_ptr->destination);
-	}
-	len += sprintf(buf + len, "\n\n");
-
-	for (int i = MAX_FLOOR; i >= MIN_FLOOR; i--) {
-		len += sprintf(buf + len, "[%c] Floor %d: %d ",
-				(elevator_system->current_floor == i ? '*' : ' '),
-				i, waiting_passengers(i));
-		struct passenger *waiting;
-		list_for_each_entry(waiting, &elevator_system->waiting_list, list) {
-			if (waiting->source == i) {
-				len += sprintf(buf + len, "%c%d ", 
-						passenger_type(waiting->type), 
-						waiting->destination);
-			}
+    switch(elevator_system->state) {
+	    case OFFLINE:
+		len += sprintf(buf + len, "Elevator state: OFFLINE\n");
+		break;
+	    
+	    case IDLE:
+		if (direction == UP){
+	            len += sprintf(buf + len, "Elevator state: UP\n");
+		    break;
 		}
-		len += sprintf(buf + len, "\n");
+		else if (direction == DOWN){
+		    len += sprintf(buf + len, "Elevator state: DOWN\n");
+		    break;
+		}
+		len += sprintf(buf + len, "Elevator state: IDLE\n");
+		break;
+	    
+	    case LOADING:
+		len += sprintf(buf + len, "Elevator state: LOADING\n");
+		break;
+	    
+	    default:
+		len += sprintf(buf + len, "Elevator state: UNKNOWN\n");
 	}
 
-	len += sprintf(buf + len, "\nNumber of passengers: %d\n", all_passengers());
-        len += sprintf(buf + len, "Number of passengers waiting: %d\n", 
+    len += sprintf(buf + len, "Current floor: %d\n", elevator_system->current_floor);
+    len += sprintf(buf + len, "Current load: %.1d lbs\n", elevator_system->current_weight);
+    len += sprintf(buf + len, "Elevator status: \n");
+	
+    struct passenger *passenger_ptr;
+    list_for_each_entry(passenger_ptr, &elevator_system->passenger_list, list) {
+        len += sprintf(buf + len, "%c%d ", passenger_type(passenger_ptr->type), 
+				passenger_ptr->destination);
+    }
+    len += sprintf(buf + len, "\n\n");
+
+    for (int i = MAX_FLOOR; i >= MIN_FLOOR; i--) {
+        len += sprintf(buf + len, "[%c] Floor %d: %d ",
+			(elevator_system->current_floor == i ? '*' : ' '), 
+		i, waiting_passengers(i));
+	struct passenger *waiting;
+	list_for_each_entry(waiting, &elevator_system->waiting_list, list) {
+	    if (waiting->source == i) {
+		len += sprintf(buf + len, "%c%d ", 
+				passenger_type(waiting->type), waiting->destination);
+	    }
+	}
+	len += sprintf(buf + len, "\n");
+    }
+
+    len += sprintf(buf + len, "\nNumber of passengers: %d\n", all_passengers());
+    len += sprintf(buf + len, "Number of passengers waiting: %d\n", 
 			all_waiting_passengers());
-        len += sprintf(buf + len, "\nNumber of passengers: %d\n", 
+    len += sprintf(buf + len, "\nNumber of passengers: %d\n", 
 			serviced_passengers());
 
-	return simple_read_from_buffer(ubuf, count, ppos, buf, len);
+    return simple_read_from_buffer(ubuf, count, ppos, buf, len);
 }
 
 static const struct proc_ops elevator_fops = {
-        .proc_read = elevator_read,
+    // proc ops for elevator function
+    .proc_read = elevator_read,
 };
 
 static int __init elevator_init(void){
+    // initializes elevator	
     printk(KERN_INFO "module loaded\n");
     mutex_init(&elevator_mutex);
     STUB_start_elevator = start_elevator;
@@ -397,8 +407,8 @@ static int __init elevator_init(void){
     elevator_thread = kmalloc(sizeof(struct thread_parameter), GFP_KERNEL);
     elevator_entry = proc_create(PROC_NAME, 0 , NULL, &elevator_fops);
     if(!elevator_thread || !elevator_entry) {
-         printk(KERN_ERR "Failed to allocate memory for elevator_thread\n");
-         return -ENOMEM;
+        printk(KERN_ERR "Failed to allocate memory for elevator_thread\n");
+        return -ENOMEM;
     }
     thread_init_parameter(elevator_thread);
 
