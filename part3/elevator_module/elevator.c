@@ -22,10 +22,9 @@
 #define MAX_ELEVATOR_WEIGHT 7
 #define OFFLINE 0
 #define IDLE 1
-#define ACTIVE 2
-#define LOADING 3
-#define UNLOADING 4
-#define DEACTIVATING 5
+#define LOADING 2
+#define UNLOADING 3
+#define DEACTIVATING 4
 #define UP 3
 #define DOWN 4
 #define PARTTIMER 0
@@ -80,7 +79,7 @@ static int all_waiting_passengers(void);
 
 int start_elevator(void){
     printk(KERN_INFO "starting elevator\n");
-    if (elevator_system && elevator_system->state == ACTIVE){
+    if (elevator_system && elevator_system->state == IDLE){
         return 1;
     }
 
@@ -206,12 +205,12 @@ int move_elevator(int target_floor){
 
     while (elevator_system->current_floor != target_floor){
         if (elevator_system->current_floor < target_floor){
-	        direction = UP;
+	    direction = UP;
             elevator_system->current_floor++;
             ssleep(2);
         }
         else{
-	        direction = DOWN;
+	    direction = DOWN;
             elevator_system->current_floor--;
             ssleep(2);
         }
@@ -225,42 +224,47 @@ int elevator_loop(void *data) {
     
     while (!kthread_should_stop()) {
         mutex_lock(&elevator_mutex);
-        
-        // Check if elevator is active
-        if (elevator_system->state == ACTIVE) {
+
+        // Check if elevator is initialized and active
+        if (elevator_system && elevator_system->state == IDLE) {
             printk(KERN_INFO "elevator active\n");
-            // Load elevator if there are passengers waiting
+
+            //load elevator if there are passengers waiting
             if (elevator_system->state != LOADING && !list_empty(&elevator_system->waiting_list)) {
                 elevator_system->state = LOADING;
                 load_elevator();
-                elevator_system->state = ACTIVE;
+                elevator_system->state = IDLE;
             }
             
-            // Unload elevator if there are passengers to drop off
+            //unload elevator if there are passengers to drop off
             if (elevator_system->state != UNLOADING && !list_empty(&elevator_system->passenger_list)) {
                 elevator_system->state = UNLOADING;
                 unload_elevator();
-                elevator_system->state = ACTIVE;
+                elevator_system->state = IDLE;
             }
             
-            // Move elevator only if it's not currently loading or unloading
-            if (elevator_system->state == ACTIVE && elevator_system->current_load > 0) {
-                struct passenger *next_passenger = list_first_entry(&elevator_system->passenger_list, struct passenger, list);
-                move_elevator(next_passenger->destination);
+            //move elevator only if it's not currently loading or unloading
+            if (elevator_system->state == IDLE) {
+                if (elevator_system->current_load > 0) {
+                    struct passenger *next_passenger = list_first_entry(&elevator_system->passenger_list, struct passenger, list);
+                    move_elevator(next_passenger->destination);
+                } else if (!list_empty(&elevator_system->waiting_list)) {
+                    struct passenger *first_passenger = list_first_entry(&elevator_system->waiting_list, struct passenger, list);
+                    move_elevator(first_passenger->source);
+                }
             }
         }
-        
+
         mutex_unlock(&elevator_mutex);
-        
     }
-    
+
     return 0;
 }
 
 void thread_init_parameter(struct thread_parameter *parm){
     static int id = 1;
     parm->id = id;
-    parm->kthread = kthread_run(elevator_loop, parm, "Starting thread\n");
+    parm->kthread = kthread_run(elevator_loop, parm, "Starting thread");
 }
 
 static char passenger_type(int type) {
@@ -328,16 +332,18 @@ static ssize_t elevator_read(struct file *m, char __user *ubuf, size_t count, lo
 			len += sprintf(buf + len, "Elevator state: OFFLINE\n");
 			break;
 		case IDLE:
+			if (direction == UP){
+				len += sprintf(buf + len, "Elevator state: UP\n");
+				break;
+			}
+			else if (direction == DOWN){
+				len += sprintf(buf + len, "Elevator state: DOWN\n");
+				break;
+			}
 			len += sprintf(buf + len, "Elevator state: IDLE\n");
 			break;
 		case LOADING:
                         len += sprintf(buf + len, "Elevator state: LOADING\n");
-                        break;
-		case ACTIVE:
-			if (direction == UP)
-				len += sprintf(buf + len, "Elevator state: UP\n");
-			else if (direction == DOWN)
-				len += sprintf(buf + len, "Elevator state: DOWN\n");
                         break;
 		default:
 			len += sprintf(buf + len, "Elevator state: UNKNOWN\n");
