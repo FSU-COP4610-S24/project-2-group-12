@@ -36,7 +36,6 @@
 
 static struct mutex elevator_mutex;
 static struct proc_dir_entry *elevator_entry;
-static int direction = IDLE;
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("RYAN BAKER");
@@ -205,16 +204,17 @@ int move_elevator(int target_floor){
 
     while (elevator_system->current_floor != target_floor){
         if (elevator_system->current_floor < target_floor){
-	    direction = UP;
+	    elevator_system->state = UP;
             elevator_system->current_floor++;
             ssleep(2);
         }
         else{
-	    direction = DOWN;
+	    elevator_system->state = DOWN;
             elevator_system->current_floor--;
             ssleep(2);
         }
     }
+    elevator_system->state = IDLE;
     return 0;
 }
 
@@ -226,20 +226,13 @@ int elevator_loop(void *data) {
         mutex_lock(&elevator_mutex);
 
         // Check if elevator is initialized and active
-        if (elevator_system && elevator_system->state == IDLE) {
+        if (elevator_system) {
             printk(KERN_INFO "elevator active\n");
 
             //load elevator if there are passengers waiting
-            if (elevator_system->state != LOADING && !list_empty(&elevator_system->waiting_list)) {
+            if (elevator_system->state == IDLE && !list_empty(&elevator_system->waiting_list)) {
                 elevator_system->state = LOADING;
                 load_elevator();
-                elevator_system->state = IDLE;
-            }
-            
-            //unload elevator if there are passengers to drop off
-            if (elevator_system->state != UNLOADING && !list_empty(&elevator_system->passenger_list)) {
-                elevator_system->state = UNLOADING;
-                unload_elevator();
                 elevator_system->state = IDLE;
             }
             
@@ -253,6 +246,14 @@ int elevator_loop(void *data) {
                     move_elevator(first_passenger->source);
                 }
             }
+            
+            //unload elevator if there are passengers to drop off
+            if (elevator_system->state == IDLE && !list_empty(&elevator_system->passenger_list)) {
+                elevator_system->state = UNLOADING;
+                unload_elevator();
+                elevator_system->state = IDLE;
+            }
+            
         }
 
         mutex_unlock(&elevator_mutex);
@@ -332,19 +333,17 @@ static ssize_t elevator_read(struct file *m, char __user *ubuf, size_t count, lo
 			len += sprintf(buf + len, "Elevator state: OFFLINE\n");
 			break;
 		case IDLE:
-			if (direction == UP){
-				len += sprintf(buf + len, "Elevator state: UP\n");
-				break;
-			}
-			else if (direction == DOWN){
-				len += sprintf(buf + len, "Elevator state: DOWN\n");
-				break;
-			}
 			len += sprintf(buf + len, "Elevator state: IDLE\n");
 			break;
 		case LOADING:
                         len += sprintf(buf + len, "Elevator state: LOADING\n");
                         break;
+                case UP:
+                	len += sprintf(buf + len, "Elevator state: UP\n");
+                	break;
+                case DOWN:
+                	len += sprintf(buf + len, "Elevator state: DOWN\n");
+                	break;
 		default:
 			len += sprintf(buf + len, "Elevator state: UNKNOWN\n");
 	}
