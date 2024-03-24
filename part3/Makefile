@@ -1,25 +1,18 @@
-obj-m += src/elevator.o syscalls.o  # Added syscalls.o to be compiled as a module
+obj-m += src/elevator.o syscalls.o  # Compile elevator.o from src/elevator.c and syscalls.o from syscalls.c
 
 KDIR := /lib/modules/$(shell uname -r)/build
 PWD := $(shell pwd)
 
-all: syscalls.ko
+all: syscalls.ko elevator.ko  # Build both syscalls.ko and elevator.ko kernel modules
 
-syscalls.ko: syscalls.c  # Compile syscalls.c into a kernel module
-    $(MAKE) -C $(KDIR) M=$(PWD) modules
+syscalls.ko: syscalls.c  # Explicit rule for building syscalls.ko, may be unnecessary as it's covered by the default kernel module build process
+	$(MAKE) -C $(KDIR) M=$(PWD) modules
 
-clean:
-	$(MAKE) -C $(KDIR) M=$(PWD) clean  # Ensure the clean command cleans up module build artifacts
+elevator.ko:  # Explicit rule for building elevator.ko, also may be unnecessary for the same reason
+	$(MAKE) -C $(KDIR) M=$(PWD) modules
 
-.PHONY: all clean run
+clean:  # Clean command to remove build artifacts
+	$(MAKE) -C $(KDIR) M=$(PWD) clean
 
-run:
-	./test_syscalls  # Assuming test_syscalls is a binary you want to execute
-
-test_syscalls:  # Compile the test_syscalls binary
-    gcc -o test_syscalls test-syscalls.c  # Removed the unnecessary inclusion of the header file in the compilation command and corrected the output file name
-
-clean:  # Extend the clean command to also remove the test_syscalls binary
-    $(MAKE) -C $(KDIR) M=$(PWD) clean
-    rm -f test_syscalls
+.PHONY: all clean
 
