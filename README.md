@@ -88,9 +88,9 @@ sudo insmod my_timer.ko
 to insert the timer module into the linux kernel.
 
 #### For the Elevator Module
-Now navigate to the part 3 folder
+Now navigate to src in the part 3 folder
 ```
-cd ../part3
+cd ../src
 ```
 
 Run make again and this time insert the elevator.ko module that was created.
@@ -98,6 +98,17 @@ Run make again and this time insert the elevator.ko module that was created.
 ```
 sudo insmod elevator.ko
 ```
+
+#### For system calls
+Navigate to the part 3 folder
+```
+cd ../part3
+```
+Run make once again and insert your newly created syscalls.ko module
+```
+sudo insmod syscalls.ko
+```
+
 ### Execution
 Use the --start flag on a consumer program that will begin running the elevator.
 Use a separate producer file and specify the number of entries (passengers) on the command line.
