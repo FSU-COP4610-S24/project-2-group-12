@@ -39,7 +39,7 @@ Group 12
 - **Assigned to**: Ryan Baker
 
 ### Part 3f: Write to Proc file
-- **Assigned to**: Alexander Kajda
+- **Assigned to**: Alexander Kajda, Ian O'Neill
 
   
 
