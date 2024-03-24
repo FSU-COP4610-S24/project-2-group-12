@@ -1,1 +1,0 @@
-savedcmd_/home/p2/iongit/project-2-group-12/part3/elevator_module/elevator.ko := ld -r -m elf_x86_64 -z noexecstack --build-id=sha1  -T scripts/module.lds -o /home/p2/iongit/project-2-group-12/part3/elevator_module/elevator.ko /home/p2/iongit/project-2-group-12/part3/elevator_module/elevator.o /home/p2/iongit/project-2-group-12/part3/elevator_module/elevator.mod.o
