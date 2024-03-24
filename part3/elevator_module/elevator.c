@@ -37,6 +37,7 @@
 static struct mutex elevator_mutex;
 static struct proc_dir_entry *elevator_entry;
 static int direction = IDLE;
+static int pass_complete = 0;
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("RYAN BAKER");
@@ -190,6 +191,8 @@ int unload_elevator(void) {
             elevator_system->current_load--;
             elevator_system->current_weight -= passenger_ptr->weight;
             kfree(passenger_ptr);
+	    pass_complete++;
+	    printk(KERN_INFO "Passengers serviced: %d\n", pass_complete);
         }
     }
 
@@ -215,6 +218,8 @@ int move_elevator(int target_floor){
             ssleep(2);
         }
     }
+    elevator_system->state = IDLE;
+    printk(KERN_INFO "Elevator state set to 1 for IDLE. Elevator state: %d\n", elevator_system->state);
     return 0;
 }
 
@@ -227,7 +232,7 @@ int elevator_loop(void *data) {
 
         // Check if elevator is initialized and active
         if (elevator_system && elevator_system->state == IDLE) {
-            printk(KERN_INFO "elevator active\n");
+           // printk(KERN_INFO "elevator active\n");
 
             //load elevator if there are passengers waiting
             if (elevator_system->state != LOADING && !list_empty(&elevator_system->waiting_list)) {
@@ -339,7 +344,11 @@ static ssize_t elevator_read(struct file *m, char __user *ubuf, size_t count, lo
 		break;
 	    
 	    case IDLE:
-		if (direction == UP){
+		if (all_passengers() == 0 && all_waiting_passengers() == 0) {
+                len += sprintf(buf + len, "Elevator state: IDLE\n");
+            break;
+        }
+        if (direction == UP){
 	            len += sprintf(buf + len, "Elevator state: UP\n");
 		    break;
 		}
@@ -386,8 +395,8 @@ static ssize_t elevator_read(struct file *m, char __user *ubuf, size_t count, lo
     len += sprintf(buf + len, "\nNumber of passengers: %d\n", all_passengers());
     len += sprintf(buf + len, "Number of passengers waiting: %d\n", 
 			all_waiting_passengers());
-    len += sprintf(buf + len, "\nNumber of passengers: %d\n", 
-			serviced_passengers());
+    len += sprintf(buf + len, "Number of passengers serviced: %d\n", 
+	         pass_complete);
 
     return simple_read_from_buffer(ubuf, count, ppos, buf, len);
 }
