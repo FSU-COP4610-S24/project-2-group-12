@@ -395,7 +395,7 @@ static ssize_t elevator_read(struct file *m, char __user *ubuf, size_t count, lo
     len += sprintf(buf + len, "\nNumber of passengers: %d\n", all_passengers());
     len += sprintf(buf + len, "Number of passengers waiting: %d\n", 
 			all_waiting_passengers());
-    len += sprintf(buf + len, "Number of passengers: %d\n", 
+    len += sprintf(buf + len, "Number of passengers serviced: %d\n", 
 	         pass_complete);
 
     return simple_read_from_buffer(ubuf, count, ppos, buf, len);
