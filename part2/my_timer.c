@@ -20,45 +20,45 @@ static struct timespec64 ts_prev;
 
 static ssize_t my_timer_read(struct file *file, char __user *ubuf, size_t count, loff_t *ppos) {
 // Read function which prints both the time elapsed since the epoch and time elapsed since last called
-	struct timespec64 ts_now;
-	char buf[256];
-	int len = 0;
+    struct timespec64 ts_now;
+    char buf[256];
+    int len = 0;
 
-	ktime_get_real_ts64(&ts_now);
+    ktime_get_real_ts64(&ts_now);
 
-	len = snprintf(buf, sizeof(buf), "Current Time: %lld.%09ld\n", (long long)ts_now.tv_sec, ts_now.tv_nsec);
+    len = snprintf(buf, sizeof(buf), "Current Time: %lld.%09ld\n", (long long)ts_now.tv_sec, ts_now.tv_nsec);
 
-	struct timespec64 elapsed;
-        elapsed = timespec64_sub(ts_now, ts_prev);
+    struct timespec64 elapsed;
+    elapsed = timespec64_sub(ts_now, ts_prev);
 
-	if (ts_prev.tv_sec != 0) {
-		len = snprintf(buf, sizeof(buf), "Current Time: %lld.%09ld\nElapsed Time: %lld.%09ld\n", (long long)ts_now.tv_sec, ts_now.tv_nsec, (long long)elapsed.tv_sec, elapsed.tv_nsec);
-	}
+    if (ts_prev.tv_sec != 0) {
+	len = snprintf(buf, sizeof(buf), "Current Time: %lld.%09ld\nElapsed Time: %lld.%09ld\n", (long long)ts_now.tv_sec, ts_now.tv_nsec, (long long)elapsed.tv_sec, elapsed.tv_nsec);
+    }
 
-	ts_prev = ts_now;
-	return simple_read_from_buffer(ubuf, count, ppos, buf, len);
+    ts_prev = ts_now;
+    return simple_read_from_buffer(ubuf, count, ppos, buf, len);
 }
 
 static const struct proc_ops my_timer_fops = {
-	// proc ops struct for the timer
-	.proc_read = my_timer_read,
+    // proc ops struct for the timer
+    .proc_read = my_timer_read,
 };
 
 static int __init my_timer_init(void) {
-	// Initializes timer 
-	timer_entry = proc_create("timer", 0644, NULL, &my_timer_fops);
-	if (!timer_entry) {
-		pr_err("Failed to create proc entry\n");
-		return -ENOMEM;
-	}
-	pr_info("my_timer module loaded\n");
-	return 0;
+    // Initializes timer 
+    timer_entry = proc_create("timer", 0644, NULL, &my_timer_fops);
+    if (!timer_entry) {
+	pr_err("Failed to create proc entry\n");
+	    return -ENOMEM;
+    }
+    pr_info("my_timer module loaded\n");
+    return 0;
 }
 
 static void __exit my_timer_exit(void) {
-	// exit function for timer
-	if (timer_entry)
-		proc_remove(timer_entry);
+    // exit function for timer
+    if (timer_entry)
+	proc_remove(timer_entry);
 	pr_info("my_timer module removed\n");
 }
 
