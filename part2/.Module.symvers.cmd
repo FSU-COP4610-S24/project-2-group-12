@@ -1,1 +1,0 @@
-savedcmd_/home/ubuntu/Desktop/project-2-group-12/part2/Module.symvers :=  scripts/mod/modpost -m -a      -o /home/ubuntu/Desktop/project-2-group-12/part2/Module.symvers -T /home/ubuntu/Desktop/project-2-group-12/part2/modules.order -i Module.symvers -e 
