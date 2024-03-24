@@ -59,8 +59,11 @@ shell/
 │ | └───── my_timer.c
 │ └── Makefile
 ├── part3/
-│ ├── 
-│ └── 
+│ ├───── src/
+│ | └───── elevator.c
+│ | └───── Makefile
+│ └──Makefile
+│ └──syscalls.c
 ├── README.md
 └── Makefile
 ```
