@@ -1,1 +1,0 @@
-savedcmd_/home/p2/Desktop/project2/part3/elevator_testing/system-calls-test/Module.symvers :=  scripts/mod/modpost -M -m -a      -o /home/p2/Desktop/project2/part3/elevator_testing/system-calls-test/Module.symvers -T /home/p2/Desktop/project2/part3/elevator_testing/system-calls-test/modules.order -i Module.symvers -e 
